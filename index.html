@@ -1,465 +1,69 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Donar - PayPal y Tarjeta</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
+    <title>Donaciones</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(145deg, #f6f9fc, #e9f0f5);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        .container {
-            max-width: 520px;
-            width: 100%;
-            background: #fff;
-            border-radius: 36px;
-            padding: 36px 28px 28px;
-            box-shadow: 0 20px 60px rgba(0, 20, 40, 0.12);
-        }
-        header { text-align: center; margin-bottom: 28px; }
-        header h1 { font-size: 28px; font-weight: 700; color: #0a2a44; }
-        header p { color: #5b6f82; font-size: 15px; margin-top: 4px; }
-        
-        .box {
-            background: #fafcff;
-            border-radius: 24px;
-            padding: 24px 20px 20px;
-            border: 1px solid #e9edf2;
-        }
-        /* Selector de moneda */
-        .currency-selector {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .currency-btn {
-            flex: 1;
-            padding: 12px 0;
-            border: 2px solid #dce2ea;
-            border-radius: 60px;
-            background: transparent;
-            font-weight: 600;
-            color: #4a5b6e;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: inherit;
-        }
-        .currency-btn.activo {
-            border-color: #0070ba;
-            background: #0070ba;
-            color: #fff;
-            box-shadow: 0 4px 12px rgba(0, 112, 186, 0.25);
-        }
-        .amount-input {
-            margin-bottom: 24px;
-        }
-        .amount-input label {
-            display: block;
-            font-size: 14px;
-            font-weight: 600;
-            color: #1f3349;
-            margin-bottom: 6px;
-        }
-        .amount-input input {
-            width: 100%;
-            padding: 14px 18px;
-            font-size: 20px;
-            font-weight: 500;
-            border: 2px solid #dce2ea;
-            border-radius: 60px;
-            text-align: center;
-            outline: none;
-            font-family: inherit;
-            transition: border 0.2s;
-        }
-        .amount-input input:focus {
-            border-color: #0070ba;
-            box-shadow: 0 0 0 4px rgba(0, 112, 186, 0.12);
-        }
-
-        /* Pestañas */
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .tab-btn {
-            flex: 1;
-            padding: 12px 0;
-            border: 2px solid #dce2ea;
-            border-radius: 60px;
-            background: transparent;
-            font-weight: 600;
-            color: #4a5b6e;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: inherit;
-        }
-        .tab-btn.activo {
-            border-color: #0070ba;
-            background: #0070ba;
-            color: #fff;
-            box-shadow: 0 4px 12px rgba(0, 112, 186, 0.25);
-        }
-        .tab-content {
-            display: none;
-            animation: fadeIn 0.25s ease;
-        }
-        .tab-content.activo {
-            display: block;
-        }
-        @keyframes fadeIn {
-            0% { opacity: 0; transform: translateY(8px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Estilos para los campos de tarjeta (Card Fields) */
-        .card-field-group {
-            margin-bottom: 16px;
-        }
-        .card-field-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: #1f3349;
-            margin-bottom: 4px;
-        }
-        .card-field {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #dce2ea;
-            border-radius: 12px;
-            background: white;
-            height: 48px;
-            transition: border 0.2s;
-            box-sizing: border-box;
-        }
-        .card-field:focus-within {
-            border-color: #0070ba;
-            box-shadow: 0 0 0 3px rgba(0, 112, 186, 0.12);
-        }
-        .card-field iframe {
-            width: 100% !important;
-            height: 100% !important;
-        }
-        .btn-pagar-tarjeta {
-            width: 100%;
-            padding: 14px;
-            background: #0070ba;
-            color: white;
-            border: none;
-            border-radius: 60px;
-            font-size: 18px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: background 0.2s;
-            margin-top: 8px;
-            font-family: inherit;
-        }
-        .btn-pagar-tarjeta:hover {
-            background: #005c9e;
-        }
-        .btn-pagar-tarjeta:disabled {
-            background: #aab8c9;
-            cursor: not-allowed;
-        }
-
-        .footer {
-            margin-top: 24px;
-            text-align: center;
-            font-size: 14px;
-            color: #7b8fa3;
-            border-top: 1px solid #eef3f8;
-            padding-top: 20px;
-        }
-        .footer span { margin-right: 6px; }
-
-        @media (max-width: 480px) {
-            .container { padding: 24px 16px; }
-            header h1 { font-size: 24px; }
-            .currency-btn, .tab-btn { font-size: 14px; }
-        }
+        body { font-family: Arial; text-align: center; padding: 40px; background: #f5f5f5; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .btn-monedas button { margin: 5px; padding: 12px 24px; cursor: pointer; border: 2px solid #0070ba; background: white; border-radius: 30px; font-weight: bold; transition: 0.3s; }
+        .btn-monedas button:hover { background: #0070ba; color: white; }
+        .btn-monedas button.activo { background: #0070ba; color: white; }
+        .oculto { display: none; }
+        .paypal-div { margin-top: 30px; }
     </style>
 </head>
 <body>
-
 <div class="container">
-    <header>
-        <h1>💙 Apóyanos</h1>
-        <p>Elige moneda, cantidad y método de pago.</p>
-    </header>
-
-    <div class="box">
-        <!-- Selector de moneda -->
-        <div class="currency-selector">
-            <button class="currency-btn activo" data-currency="EUR">🇪🇺 EUR</button>
-            <button class="currency-btn" data-currency="USD">🇺🇸 USD</button>
-            <button class="currency-btn" data-currency="MXN">🇲🇽 MXN</button>
-        </div>
-
-        <!-- Campo de monto -->
-        <div class="amount-input">
-            <label for="amount">Cantidad a donar</label>
-            <input type="number" id="amount" placeholder="0.00" min="0.01" step="0.01" value="10.00" />
-        </div>
-
-        <!-- Pestañas de método de pago -->
-        <div class="tabs">
-            <button class="tab-btn activo" data-tab="paypal">💳 PayPal</button>
-            <button class="tab-btn" data-tab="card">💳 Tarjeta</button>
-        </div>
-
-        <!-- CONTENIDO: PayPal -->
-        <div id="tab-paypal" class="tab-content activo">
-            <div id="paypal-button-container" style="min-height:110px;"></div>
-        </div>
-
-        <!-- CONTENIDO: Tarjeta (Campos en la misma página) -->
-        <div id="tab-card" class="tab-content">
-            <div id="card-fields-container">
-                <div class="card-field-group">
-                    <label>Número de tarjeta</label>
-                    <div id="card-number-field" class="card-field"></div>
-                </div>
-                <div class="card-field-group">
-                    <label>Fecha de expiración (MM/AA)</label>
-                    <div id="card-expiry-field" class="card-field"></div>
-                </div>
-                <div class="card-field-group">
-                    <label>CVV</label>
-                    <div id="card-cvv-field" class="card-field"></div>
-                </div>
-                <div class="card-field-group">
-                    <label>Nombre del titular</label>
-                    <div id="card-name-field" class="card-field"></div>
-                </div>
-                <button id="card-submit-btn" class="btn-pagar-tarjeta">Pagar ahora</button>
-                <div id="card-errors" style="margin-top:12px; color:#b91c1c; font-size:14px; text-align:center;"></div>
-            </div>
-        </div>
+    <h1>💙 Donar</h1>
+    <p>Elige moneda y haz clic en el botón de PayPal para donar la cantidad que desees.</p>
+    <div class="btn-monedas">
+        <button class="activo" onclick="mostrar('eur', this)">🇪🇺 EUR</button>
+        <button onclick="mostrar('usd', this)">🇺🇸 USD</button>
+        <button onclick="mostrar('mxn', this)">🇲🇽 MXN</button>
     </div>
 
-    <div class="footer">
-        <span>🔒</span> Pagos seguros vía PayPal · Tus datos bancarios están protegidos
+    <!-- EUR -->
+    <div id="eur" class="paypal-div">
+        <script src="https://www.paypal.com/sdk/js?client-id=BAAKWAcerKo-Sa0MtDQKoUrWQzdaLWnWokdOf0wfgAD1jFl_empEwpQuMqz7DFOXQCMolgGgQ2wgHsbQ-I&components=hosted-buttons&disable-funding=venmo&currency=EUR"></script>
+        <div id="paypal-container-NBGAACX63BLWG"></div>
+        <script>
+            paypal.HostedButtons({
+                hostedButtonId: "NBGAACX63BLWG",
+            }).render("#paypal-container-NBGAACX63BLWG")
+        </script>
     </div>
+
+    <!-- USD -->
+    <div id="usd" class="paypal-div oculto">
+        <script src="https://www.paypal.com/sdk/js?client-id=BAAKWAcerKo-Sa0MtDQKoUrWQzdaLWnWokdOf0wfgAD1jFl_empEwpQuMqz7DFOXQCMolgGgQ2wgHsbQ-I&components=hosted-buttons&disable-funding=venmo&currency=USD"></script>
+        <div id="paypal-container-5JAVN94MQCZRQ"></div>
+        <script>
+            paypal.HostedButtons({
+                hostedButtonId: "5JAVN94MQCZRQ",
+            }).render("#paypal-container-5JAVN94MQCZRQ")
+        </script>
+    </div>
+
+    <!-- MXN -->
+    <div id="mxn" class="paypal-div oculto">
+        <script src="https://www.paypal.com/sdk/js?client-id=BAAKWAcerKo-Sa0MtDQKoUrWQzdaLWnWokdOf0wfgAD1jFl_empEwpQuMqz7DFOXQCMolgGgQ2wgHsbQ-I&components=hosted-buttons&disable-funding=venmo&currency=MXN"></script>
+        <div id="paypal-container-GKU5U6WXG2FBQ"></div>
+        <script>
+            paypal.HostedButtons({
+                hostedButtonId: "GKU5U6WXG2FBQ",
+            }).render("#paypal-container-GKU5U6WXG2FBQ")
+        </script>
+    </div>
+
 </div>
 
-<!-- ========================================================== -->
-<!-- SDK de PayPal (Checkout + Card Fields)                      -->
-<!-- ========================================================== -->
-<script src="https://www.paypal.com/sdk/js?client-id=BAAKWAcerKo-Sa0MtDQKoUrWQzdaLWnWokdOf0wfgAD1jFl_empEwpQuMqz7DFOXQCMolgGgQ2wgHsbQ-I&components=buttons,card-fields&currency=EUR&intent=capture">
-</script>
-
 <script>
-    (function() {
-        // ---- Elementos ----
-        const currencyButtons = document.querySelectorAll('.currency-btn');
-        const amountInput = document.getElementById('amount');
-        const tabButtons = document.querySelectorAll('.tab-btn');
-        const tabPaypal = document.getElementById('tab-paypal');
-        const tabCard = document.getElementById('tab-card');
-        const paypalContainer = document.getElementById('paypal-button-container');
-        const cardSubmitBtn = document.getElementById('card-submit-btn');
-        const cardErrors = document.getElementById('card-errors');
-
-        let selectedCurrency = 'EUR';
-        let currentTab = 'paypal';
-        let cardFieldsInstance = null;
-
-        // ---- Función para obtener monto válido ----
-        function getValidAmount() {
-            const val = parseFloat(amountInput.value);
-            return (isNaN(val) || val <= 0) ? null : val;
-        }
-
-        // ---- Renderizar botón de PayPal ----
-        function renderPayPalButton() {
-            const amount = getValidAmount();
-            paypalContainer.innerHTML = '';
-            if (!amount) {
-                paypalContainer.innerHTML = '<p style="color:#b91c1c; text-align:center;">Ingresa un monto válido</p>';
-                return;
-            }
-            if (typeof paypal === 'undefined') return;
-
-            try {
-                paypal.Buttons({
-                    style: { layout: 'vertical', color: 'blue', shape: 'pill', label: 'donate' },
-                    createOrder: function(data, actions) {
-                        return actions.order.create({
-                            intent: 'CAPTURE',
-                            purchase_units: [{
-                                amount: {
-                                    currency_code: selectedCurrency,
-                                    value: amount.toFixed(2)
-                                },
-                                description: 'Donación voluntaria'
-                            }],
-                            application_context: { shipping_preference: 'NO_SHIPPING' }
-                        });
-                    },
-                    onApprove: function(data, actions) {
-                        return actions.order.capture().then(function(details) {
-                            alert('✅ ¡Donación completada! Gracias ' + details.payer.name.given_name);
-                        });
-                    },
-                    onError: function(err) {
-                        console.error(err);
-                        alert('❌ Error al procesar el pago con PayPal.');
-                    }
-                }).render(paypalContainer);
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
-        // ---- Renderizar campos de tarjeta (Card Fields) ----
-        function renderCardFields() {
-            const amount = getValidAmount();
-            cardErrors.textContent = '';
-
-            // Limpiar contenedores
-            document.querySelectorAll('.card-field').forEach(el => el.innerHTML = '');
-
-            if (!amount) {
-                cardErrors.textContent = '⚠️ Ingresa un monto válido';
-                cardSubmitBtn.disabled = true;
-                return;
-            }
-            if (typeof paypal === 'undefined' || !paypal.CardFields) {
-                cardErrors.textContent = '❌ Componente de tarjeta no disponible.';
-                return;
-            }
-
-            try {
-                // Crear instancia de Card Fields
-                cardFieldsInstance = paypal.CardFields({
-                    createOrder: function(data, actions) {
-                        return actions.order.create({
-                            intent: 'CAPTURE',
-                            purchase_units: [{
-                                amount: {
-                                    currency_code: selectedCurrency,
-                                    value: amount.toFixed(2)
-                                },
-                                description: 'Donación voluntaria con tarjeta'
-                            }],
-                            application_context: { shipping_preference: 'NO_SHIPPING' }
-                        });
-                    },
-                    onApprove: function(data, actions) {
-                        // Capturar la orden (cobrar)
-                        return actions.order.capture().then(function(details) {
-                            alert('✅ ¡Pago con tarjeta completado! Gracias ' + details.payer.name.given_name);
-                            // Reiniciar campos si quieres
-                        });
-                    },
-                    onError: function(err) {
-                        console.error(err);
-                        cardErrors.textContent = '❌ Error en el pago con tarjeta: ' + (err.message || '');
-                        cardSubmitBtn.disabled = false;
-                    }
-                });
-
-                // Renderizar cada campo en su contenedor
-                const nameField = cardFieldsInstance.NameField();
-                nameField.render('#card-name-field');
-
-                const numberField = cardFieldsInstance.NumberField();
-                numberField.render('#card-number-field');
-
-                const expiryField = cardFieldsInstance.ExpiryField();
-                expiryField.render('#card-expiry-field');
-
-                const cvvField = cardFieldsInstance.CVVField();
-                cvvField.render('#card-cvv-field');
-
-                // Habilitar botón de enviar
-                cardSubmitBtn.disabled = false;
-
-                // Manejar el envío del formulario de tarjeta
-                cardSubmitBtn.onclick = function(e) {
-                    e.preventDefault();
-                    if (!cardFieldsInstance) return;
-                    cardSubmitBtn.disabled = true;
-                    cardErrors.textContent = 'Procesando...';
-                    // Validar campos antes de enviar
-                    cardFieldsInstance.submit().catch(function(err) {
-                        console.error(err);
-                        cardErrors.textContent = '❌ ' + (err.message || 'Error al enviar los datos de la tarjeta');
-                        cardSubmitBtn.disabled = false;
-                    });
-                };
-
-            } catch (err) {
-                console.error(err);
-                cardErrors.textContent = '❌ Error al inicializar campos de tarjeta: ' + err.message;
-                cardSubmitBtn.disabled = true;
-            }
-        }
-
-        // ---- Renderizar todo (según la pestaña activa) ----
-        function renderAll() {
-            if (currentTab === 'paypal') {
-                renderPayPalButton();
-            } else {
-                renderCardFields();
-            }
-        }
-
-        // ---- Cambiar de pestaña ----
-        function switchTab(tabId) {
-            currentTab = tabId;
-            // Actualizar botones de pestaña
-            tabButtons.forEach(btn => {
-                btn.classList.toggle('activo', btn.dataset.tab === tabId);
-            });
-            // Mostrar/ocultar contenidos
-            tabPaypal.classList.toggle('activo', tabId === 'paypal');
-            tabCard.classList.toggle('activo', tabId === 'card');
-            // Renderizar el contenido correspondiente
-            renderAll();
-        }
-
-        // ---- Eventos ----
-        currencyButtons.forEach(btn => {
-            btn.addEventListener('click', function() {
-                currencyButtons.forEach(b => b.classList.remove('activo'));
-                this.classList.add('activo');
-                selectedCurrency = this.dataset.currency;
-                renderAll();
-            });
-        });
-
-        amountInput.addEventListener('input', function() {
-            renderAll();
-        });
-
-        tabButtons.forEach(btn => {
-            btn.addEventListener('click', function() {
-                switchTab(this.dataset.tab);
-            });
-        });
-
-        // ---- Inicializar ----
-        // Esperar a que cargue el SDK
-        setTimeout(function() {
-            renderAll();
-        }, 600);
-
-        // Exponer funciones para depuración (opcional)
-        window.renderAll = renderAll;
-    })();
+    function mostrar(id, boton) {
+        document.querySelectorAll('.paypal-div').forEach(el => el.classList.add('oculto'));
+        document.getElementById(id).classList.remove('oculto');
+        document.querySelectorAll('.btn-monedas button').forEach(b => b.classList.remove('activo'));
+        if (boton) boton.classList.add('activo');
+    }
 </script>
 
 </body>
