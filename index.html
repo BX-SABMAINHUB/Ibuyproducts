@@ -10,6 +10,21 @@
         .btn-monedas button.activo { background: #0070ba; color: white; }
         .oculto { display: none; }
         .paypal-div { margin-top: 30px; }
+        .card-button-container { margin-top: 15px; }
+        .separador { 
+            display: flex; 
+            align-items: center; 
+            margin: 15px 0 10px; 
+            color: #888; 
+            font-size: 14px;
+        }
+        .separador::before, .separador::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #ddd;
+        }
+        .separador::before { margin-right: 15px; }
+        .separador::after { margin-left: 15px; }
     </style>
 </head>
 <body>
@@ -22,8 +37,9 @@
         <button onclick="mostrar('mxn', this)">🇲🇽 MXN</button>
     </div>
 
-    <!-- EUR -->
+    <!-- ==================== EUR ==================== -->
     <div id="eur" class="paypal-div">
+        <!-- Botón PayPal original -->
         <script src="https://www.paypal.com/sdk/js?client-id=BAAKWAcerKo-Sa0MtDQKoUrWQzdaLWnWokdOf0wfgAD1jFl_empEwpQuMqz7DFOXQCMolgGgQ2wgHsbQ-I&components=hosted-buttons&disable-funding=venmo&currency=EUR"></script>
         <div id="paypal-container-NBGAACX63BLWG"></div>
         <script>
@@ -31,9 +47,69 @@
                 hostedButtonId: "NBGAACX63BLWG",
             }).render("#paypal-container-NBGAACX63BLWG")
         </script>
+
+        <!-- Separador y botón de tarjeta -->
+        <div class="separador">O paga con tarjeta</div>
+        <div id="card-button-eur" class="card-button-container"></div>
+        <script>
+            // Función para renderizar el botón de tarjeta en EUR
+            function renderCardButtonEUR() {
+                if (document.getElementById('card-button-eur').innerHTML !== '') return;
+                // Cargar SDK de Checkout (si no está cargado)
+                if (typeof paypalCheckout === 'undefined') {
+                    var script = document.createElement('script');
+                    script.src = 'https://www.paypal.com/sdk/js?client-id=BAAKWAcerKo-Sa0MtDQKoUrWQzdaLWnWokdOf0wfgAD1jFl_empEwpQuMqz7DFOXQCMolgGgQ2wgHsbQ-I&components=buttons&currency=EUR&intent=capture';
+                    script.onload = function() {
+                        window.paypalCheckout = paypal;
+                        createCardButton('eur', 'EUR');
+                    };
+                    document.head.appendChild(script);
+                } else {
+                    createCardButton('eur', 'EUR');
+                }
+            }
+            function createCardButton(divId, currency) {
+                var container = document.getElementById('card-button-' + divId);
+                if (!container || container.innerHTML !== '') return;
+                paypalCheckout.Buttons({
+                    style: { 
+                        label: 'card', 
+                        color: 'blue', 
+                        shape: 'pill',
+                        height: 48
+                    },
+                    createOrder: function(data, actions) {
+                        var amount = parseFloat(document.getElementById('amount-eur').value) || 10.00;
+                        return actions.order.create({
+                            purchase_units: [{
+                                amount: { 
+                                    currency_code: currency, 
+                                    value: amount.toFixed(2) 
+                                },
+                                description: 'Donación con tarjeta'
+                            }],
+                            application_context: { shipping_preference: 'NO_SHIPPING' }
+                        });
+                    },
+                    onApprove: function(data, actions) {
+                        return actions.order.capture().then(function(details) {
+                            alert('✅ ¡Pago con tarjeta completado! Gracias ' + details.payer.name.given_name);
+                        });
+                    },
+                    onError: function(err) {
+                        console.error(err);
+                        alert('❌ Error en el pago con tarjeta. Revisa la consola.');
+                    }
+                }).render('#card-button-' + divId);
+            }
+            // Llamar al cargar
+            setTimeout(renderCardButtonEUR, 1000);
+        </script>
+        <!-- Campo oculto para el monto (se usa en el botón de tarjeta) -->
+        <input type="hidden" id="amount-eur" value="10.00" />
     </div>
 
-    <!-- USD -->
+    <!-- ==================== USD ==================== -->
     <div id="usd" class="paypal-div oculto">
         <script src="https://www.paypal.com/sdk/js?client-id=BAAKWAcerKo-Sa0MtDQKoUrWQzdaLWnWokdOf0wfgAD1jFl_empEwpQuMqz7DFOXQCMolgGgQ2wgHsbQ-I&components=hosted-buttons&disable-funding=venmo&currency=USD"></script>
         <div id="paypal-container-5JAVN94MQCZRQ"></div>
@@ -42,9 +118,30 @@
                 hostedButtonId: "5JAVN94MQCZRQ",
             }).render("#paypal-container-5JAVN94MQCZRQ")
         </script>
+
+        <div class="separador">O paga con tarjeta</div>
+        <div id="card-button-usd" class="card-button-container"></div>
+        <script>
+            function renderCardButtonUSD() {
+                if (document.getElementById('card-button-usd').innerHTML !== '') return;
+                if (typeof paypalCheckout === 'undefined') {
+                    var script = document.createElement('script');
+                    script.src = 'https://www.paypal.com/sdk/js?client-id=BAAKWAcerKo-Sa0MtDQKoUrWQzdaLWnWokdOf0wfgAD1jFl_empEwpQuMqz7DFOXQCMolgGgQ2wgHsbQ-I&components=buttons&currency=USD&intent=capture';
+                    script.onload = function() {
+                        window.paypalCheckout = paypal;
+                        createCardButton('usd', 'USD');
+                    };
+                    document.head.appendChild(script);
+                } else {
+                    createCardButton('usd', 'USD');
+                }
+            }
+            setTimeout(renderCardButtonUSD, 1000);
+        </script>
+        <input type="hidden" id="amount-usd" value="10.00" />
     </div>
 
-    <!-- MXN -->
+    <!-- ==================== MXN ==================== -->
     <div id="mxn" class="paypal-div oculto">
         <script src="https://www.paypal.com/sdk/js?client-id=BAAKWAcerKo-Sa0MtDQKoUrWQzdaLWnWokdOf0wfgAD1jFl_empEwpQuMqz7DFOXQCMolgGgQ2wgHsbQ-I&components=hosted-buttons&disable-funding=venmo&currency=MXN"></script>
         <div id="paypal-container-GKU5U6WXG2FBQ"></div>
@@ -53,6 +150,27 @@
                 hostedButtonId: "GKU5U6WXG2FBQ",
             }).render("#paypal-container-GKU5U6WXG2FBQ")
         </script>
+
+        <div class="separador">O paga con tarjeta</div>
+        <div id="card-button-mxn" class="card-button-container"></div>
+        <script>
+            function renderCardButtonMXN() {
+                if (document.getElementById('card-button-mxn').innerHTML !== '') return;
+                if (typeof paypalCheckout === 'undefined') {
+                    var script = document.createElement('script');
+                    script.src = 'https://www.paypal.com/sdk/js?client-id=BAAKWAcerKo-Sa0MtDQKoUrWQzdaLWnWokdOf0wfgAD1jFl_empEwpQuMqz7DFOXQCMolgGgQ2wgHsbQ-I&components=buttons&currency=MXN&intent=capture';
+                    script.onload = function() {
+                        window.paypalCheckout = paypal;
+                        createCardButton('mxn', 'MXN');
+                    };
+                    document.head.appendChild(script);
+                } else {
+                    createCardButton('mxn', 'MXN');
+                }
+            }
+            setTimeout(renderCardButtonMXN, 1000);
+        </script>
+        <input type="hidden" id="amount-mxn" value="10.00" />
     </div>
 
 </div>
