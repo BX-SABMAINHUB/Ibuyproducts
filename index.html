@@ -146,7 +146,7 @@
                 <input type="number" id="amount" placeholder="0.00" min="0.01" step="0.01" value="10.00" />
             </div>
 
-            <!-- Contenedor del botón de PayPal (se renderiza aquí) -->
+            <!-- Contenedor del botón de PayPal -->
             <div id="paypal-button-container"></div>
         </div>
 
@@ -156,63 +156,54 @@
     </div>
 
     <!-- ========================================================== -->
-    <!-- SDK de PayPal (Checkout) - Carga la librería                -->
+    <!-- SDK DE PAYPAL (YA CON TU CLIENT-ID PUESTO)                  -->
     <!-- ========================================================== -->
-    <script src="https://www.paypal.com/sdk/js?client-id=TU_CLIENT_ID&currency=EUR&intent=donation"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id=BAAKWAcerKo-Sa0MtDQKoUrWQzdaLWnWokdOf0wfgAD1jFl_empEwpQuMqz7DFOXQCMolgGgQ2wgHsbQ-I&currency=EUR&intent=donation">
+    </script>
 
     <script>
-        // ---- 1. Obtener referencias a los elementos ----
+        // ---- Elementos ----
         const currencyButtons = document.querySelectorAll('.currency-btn');
         const amountInput = document.getElementById('amount');
         const container = document.getElementById('paypal-button-container');
 
-        let selectedCurrency = 'EUR'; // por defecto
+        let selectedCurrency = 'EUR';
 
-        // ---- 2. Lógica para cambiar moneda ----
+        // ---- Cambiar moneda ----
         currencyButtons.forEach(btn => {
             btn.addEventListener('click', function() {
-                // Cambiar estilo
                 currencyButtons.forEach(b => b.classList.remove('activo'));
                 this.classList.add('activo');
-
-                // Guardar la moneda seleccionada
                 selectedCurrency = this.dataset.currency;
-
-                // **IMPORTANTE**: El botón de PayPal se debe re-renderizar con la nueva moneda
                 renderPayPalButton();
             });
         });
 
-        // ---- 3. Función que renderiza (o re-renderiza) el botón de PayPal ----
+        // ---- Renderizar botón ----
         function renderPayPalButton() {
-            // Limpiar el contenedor
             container.innerHTML = '';
 
-            // Obtener el monto actual (si es inválido, usamos 0)
             let amount = parseFloat(amountInput.value);
             if (isNaN(amount) || amount <= 0) {
-                // Si no es válido, mostramos un mensaje o deshabilitamos el botón
-                container.innerHTML = '<p style="color:#b91c1c; font-weight:500; text-align:center;">Ingresa un monto válido</p>';
+                container.innerHTML =
+                '<p style="color:#b91c1c; font-weight:500; text-align:center;">Ingresa un monto válido</p>';
                 return;
             }
 
-            // Crear el botón de PayPal con la configuración dinámica
             paypal.Buttons({
-                // Tipo de transacción: donación
                 style: {
                     layout: 'vertical',
                     color: 'blue',
                     shape: 'pill',
                     label: 'donate',
                 },
-                // Crear la orden con el monto y moneda seleccionados
                 createOrder: function(data, actions) {
                     return actions.order.create({
-                        intent: 'CAPTURE', // para donaciones también se usa CAPTURE
+                        intent: 'CAPTURE',
                         purchase_units: [{
                             amount: {
                                 currency_code: selectedCurrency,
-                                value: amount.toFixed(2) // dos decimales
+                                value: amount.toFixed(2)
                             },
                             description: 'Donación voluntaria'
                         }],
@@ -221,15 +212,12 @@
                         }
                     });
                 },
-                // Cuando se aprueba el pago, redirige a la página de éxito (opcional)
                 onApprove: function(data, actions) {
                     return actions.order.capture().then(function(details) {
-                        // Aquí puedes redirigir a una página de gracias
                         alert('¡Donación completada! Gracias ' + details.payer.name.given_name);
-                        // O redirigir: window.location.href = 'gracias.html';
+                        // window.location.href = 'gracias.html'; // Descomenta si tienes una página de gracias
                     });
                 },
-                // Si hay error
                 onError: function(err) {
                     console.error(err);
                     alert('Ocurrió un error. Intenta de nuevo.');
@@ -237,12 +225,12 @@
             }).render(container);
         }
 
-        // ---- 4. Cuando el usuario cambie el monto, re-renderizamos ----
+        // ---- Evento al cambiar el monto ----
         amountInput.addEventListener('input', function() {
             renderPayPalButton();
         });
 
-        // ---- 5. Renderizar el botón al cargar la página ----
+        // ---- Cargar al inicio ----
         renderPayPalButton();
     </script>
 
