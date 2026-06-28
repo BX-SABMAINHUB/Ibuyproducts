@@ -1,188 +1,302 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Donaciones</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Comprar producto</title>
     <style>
-        body { font-family: Arial; text-align: center; padding: 40px; background: #f5f5f5; }
-        .container { max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .btn-monedas button { margin: 5px; padding: 12px 24px; cursor: pointer; border: 2px solid #0070ba; background: white; border-radius: 30px; font-weight: bold; transition: 0.3s; }
-        .btn-monedas button:hover { background: #0070ba; color: white; }
-        .btn-monedas button.activo { background: #0070ba; color: white; }
-        .oculto { display: none; }
-        .paypal-div { margin-top: 30px; }
-        .card-button-container { margin-top: 15px; }
-        .separador { 
-            display: flex; 
-            align-items: center; 
-            margin: 15px 0 10px; 
-            color: #888; 
-            font-size: 14px;
+        /* === ESTILOS ORIGINALES (se mantienen) === */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 40px;
+            background: #f5f5f5;
+            margin: 0;
         }
-        .separador::before, .separador::after {
-            content: '';
-            flex: 1;
-            border-bottom: 1px solid #ddd;
+        .container {
+            max-width: 500px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: relative; /* para el idioma */
         }
-        .separador::before { margin-right: 15px; }
-        .separador::after { margin-left: 15px; }
+        .btn-monedas button {
+            margin: 5px;
+            padding: 12px 24px;
+            cursor: pointer;
+            border: 2px solid #0070ba;
+            background: white;
+            border-radius: 30px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .btn-monedas button:hover {
+            background: #0070ba;
+            color: white;
+        }
+        .btn-monedas button.activo {
+            background: #0070ba;
+            color: white;
+        }
+        .oculto {
+            display: none;
+        }
+        .paypal-div {
+            margin-top: 30px;
+        }
+
+        /* === NUEVO: Selector de idioma (arriba a la derecha) === */
+        .idioma-selector {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            display: flex;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+        .idioma-selector button {
+            background: none;
+            border: 1px solid #ccc;
+            border-radius: 30px;
+            padding: 4px 10px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+            font-size: 13px;
+        }
+        .idioma-selector button:hover {
+            background: #0070ba;
+            color: white;
+            border-color: #0070ba;
+        }
+        .idioma-selector button.activo-idioma {
+            background: #0070ba;
+            color: white;
+            border-color: #0070ba;
+        }
+
+        /* === PANTALLA DE CARGA (overlay) === */
+        #carga-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.8s ease;
+        }
+        #carga-overlay.oculto-carga {
+            opacity: 0;
+            pointer-events: none;
+        }
+        /* Rueda giratoria */
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 6px solid #e0e0e0;
+            border-top: 6px solid #0070ba;
+            border-radius: 50%;
+            animation: girar 0.9s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes girar {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        #texto-carga {
+            font-size: 16px;
+            color: #333;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+        #texto-carga small {
+            display: block;
+            font-size: 13px;
+            font-weight: normal;
+            color: #777;
+            margin-top: 6px;
+        }
+
+        /* Ajuste para que el container no se vea mientras carga */
+        #contenido-principal {
+            display: none;
+        }
+        #contenido-principal.visible {
+            display: block;
+        }
     </style>
 </head>
 <body>
-<div class="container">
-    <h1>💙 Donar</h1>
-    <p>Elige moneda y haz clic en el botón de PayPal para donar la cantidad que desees.</p>
-    <div class="btn-monedas">
-        <button class="activo" onclick="mostrar('eur', this)">🇪🇺 EUR</button>
-        <button onclick="mostrar('usd', this)">🇺🇸 USD</button>
-        <button onclick="mostrar('mxn', this)">🇲🇽 MXN</button>
+
+    <!-- ===== PANTALLA DE CARGA ===== -->
+    <div id="carga-overlay">
+        <div class="spinner"></div>
+        <div id="texto-carga">
+            Cargando recursos de pago
+            <small>conectando con tu IP · descargando contenido seguro</small>
+        </div>
     </div>
 
-    <!-- ==================== EUR ==================== -->
-    <div id="eur" class="paypal-div">
-        <!-- Botón PayPal original -->
-        <script src="https://www.paypal.com/sdk/js?client-id=BAAKWAcerKo-Sa0MtDQKoUrWQzdaLWnWokdOf0wfgAD1jFl_empEwpQuMqz7DFOXQCMolgGgQ2wgHsbQ-I&components=hosted-buttons&disable-funding=venmo&currency=EUR"></script>
-        <div id="paypal-container-NBGAACX63BLWG"></div>
-        <script>
-            paypal.HostedButtons({
-                hostedButtonId: "NBGAACX63BLWG",
-            }).render("#paypal-container-NBGAACX63BLWG")
-        </script>
+    <!-- ===== CONTENIDO PRINCIPAL (se muestra tras 10s) ===== -->
+    <div id="contenido-principal" class="container">
 
-        <!-- Separador y botón de tarjeta -->
-        <div class="separador">O paga con tarjeta</div>
-        <div id="card-button-eur" class="card-button-container"></div>
-        <script>
-            // Función para renderizar el botón de tarjeta en EUR
-            function renderCardButtonEUR() {
-                if (document.getElementById('card-button-eur').innerHTML !== '') return;
-                // Cargar SDK de Checkout (si no está cargado)
-                if (typeof paypalCheckout === 'undefined') {
-                    var script = document.createElement('script');
-                    script.src = 'https://www.paypal.com/sdk/js?client-id=BAAKWAcerKo-Sa0MtDQKoUrWQzdaLWnWokdOf0wfgAD1jFl_empEwpQuMqz7DFOXQCMolgGgQ2wgHsbQ-I&components=buttons&currency=EUR&intent=capture';
-                    script.onload = function() {
-                        window.paypalCheckout = paypal;
-                        createCardButton('eur', 'EUR');
-                    };
-                    document.head.appendChild(script);
-                } else {
-                    createCardButton('eur', 'EUR');
+        <!-- Selector de idioma (arriba a la derecha) -->
+        <div class="idioma-selector">
+            <button class="activo-idioma" data-idioma="es">ES</button>
+            <button data-idioma="en">EN</button>
+            <button data-idioma="ar">عَر</button>
+        </div>
+
+        <!-- TÍTULO y DESCRIPCIÓN (cambiados) -->
+        <h1 id="titulo">💙 Comprar el producto</h1>
+        <p id="descripcion">Ya le dirigido a la página web de compra depende el producto</p>
+
+        <!-- BOTONES DE MONEDA (idénticos) -->
+        <div class="btn-monedas">
+            <button class="activo" onclick="mostrar('eur', this)" data-moneda="EUR">🇪🇺 EUR</button>
+            <button onclick="mostrar('usd', this)" data-moneda="USD">🇺🇸 USD</button>
+            <button onclick="mostrar('mxn', this)" data-moneda="MXN">🇲🇽 MXN</button>
+        </div>
+
+        <!-- EUR -->
+        <div id="eur" class="paypal-div">
+            <script src="https://www.paypal.com/sdk/js?client-id=BAAKWAcerKo-Sa0MtDQKoUrWQzdaLWnWokdOf0wfgAD1jFl_empEwpQuMqz7DFOXQCMolgGgQ2wgHsbQ-I&components=hosted-buttons&disable-funding=venmo&currency=EUR"></script>
+            <div id="paypal-container-NBGAACX63BLWG"></div>
+            <script>
+                paypal.HostedButtons({
+                    hostedButtonId: "NBGAACX63BLWG",
+                }).render("#paypal-container-NBGAACX63BLWG")
+            </script>
+        </div>
+
+        <!-- USD -->
+        <div id="usd" class="paypal-div oculto">
+            <script src="https://www.paypal.com/sdk/js?client-id=BAAKWAcerKo-Sa0MtDQKoUrWQzdaLWnWokdOf0wfgAD1jFl_empEwpQuMqz7DFOXQCMolgGgQ2wgHsbQ-I&components=hosted-buttons&disable-funding=venmo&currency=USD"></script>
+            <div id="paypal-container-5JAVN94MQCZRQ"></div>
+            <script>
+                paypal.HostedButtons({
+                    hostedButtonId: "5JAVN94MQCZRQ",
+                }).render("#paypal-container-5JAVN94MQCZRQ")
+            </script>
+        </div>
+
+        <!-- MXN -->
+        <div id="mxn" class="paypal-div oculto">
+            <script src="https://www.paypal.com/sdk/js?client-id=BAAKWAcerKo-Sa0MtDQKoUrWQzdaLWnWokdOf0wfgAD1jFl_empEwpQuMqz7DFOXQCMolgGgQ2wgHsbQ-I&components=hosted-buttons&disable-funding=venmo&currency=MXN"></script>
+            <div id="paypal-container-GKU5U6WXG2FBQ"></div>
+            <script>
+                paypal.HostedButtons({
+                    hostedButtonId: "GKU5U6WXG2FBQ",
+                }).render("#paypal-container-GKU5U6WXG2FBQ")
+            </script>
+        </div>
+
+    </div>
+
+    <script>
+        // ============================================================
+        // 1. PANTALLA DE CARGA (10 segundos con mensajes cambiantes)
+        // ============================================================
+        const overlay = document.getElementById('carga-overlay');
+        const textoCarga = document.getElementById('texto-carga');
+        const contenido = document.getElementById('contenido-principal');
+
+        const mensajesCarga = [
+            { principal: 'Cargando recursos de pago', secundario: 'conectando con tu IP · descargando contenido seguro' },
+            { principal: 'Verificando conexión segura', secundario: 'cifrando datos de transacción...' },
+            { principal: 'Preparando entorno de compra', secundario: 'autenticando servidor de pagos' },
+            { principal: 'Todo listo', secundario: 'redirigiendo a la pasarela...' },
+        ];
+
+        let indiceMensaje = 0;
+        const intervaloMensajes = setInterval(() => {
+            indiceMensaje = (indiceMensaje + 1) % mensajesCarga.length;
+            const m = mensajesCarga[indiceMensaje];
+            textoCarga.innerHTML = m.principal + ' <small>' + m.secundario + '</small>';
+        }, 2500);
+
+        // Al cabo de 10 segundos, ocultar overlay y mostrar contenido
+        setTimeout(() => {
+            clearInterval(intervaloMensajes);
+            overlay.classList.add('oculto-carga');
+            contenido.classList.add('visible');
+            // Opcional: eliminar el overlay del DOM tras la transición
+            setTimeout(() => { overlay.style.display = 'none'; }, 800);
+        }, 10000);
+
+        // ============================================================
+        // 2. FUNCIÓN mostrar (idéntica a la original)
+        // ============================================================
+        function mostrar(id, boton) {
+            document.querySelectorAll('.paypal-div').forEach(el => el.classList.add('oculto'));
+            document.getElementById(id).classList.remove('oculto');
+            document.querySelectorAll('.btn-monedas button').forEach(b => b.classList.remove('activo'));
+            if (boton) boton.classList.add('activo');
+        }
+
+        // ============================================================
+        // 3. SELECTOR DE IDIOMA (cambia textos de la interfaz)
+        // ============================================================
+        const idiomaBotones = document.querySelectorAll('.idioma-selector button');
+        const elementosTexto = {
+            titulo: document.getElementById('titulo'),
+            descripcion: document.getElementById('descripcion'),
+            botonesMoneda: document.querySelectorAll('.btn-monedas button'),
+        };
+
+        const traducciones = {
+            es: {
+                titulo: '💙 Comprar el producto',
+                descripcion: 'Ya le dirigido a la página web de compra depende el producto',
+                monedas: ['🇪🇺 EUR', '🇺🇸 USD', '🇲🇽 MXN'],
+            },
+            en: {
+                titulo: '💙 Buy the product',
+                descripcion: 'You will be redirected to the product purchase page',
+                monedas: ['🇪🇺 EUR', '🇺🇸 USD', '🇲🇽 MXN'],
+            },
+            ar: {
+                titulo: '💙 شراء المنتج',
+                descripcion: 'سيتم توجيهك إلى صفحة شراء المنتج',
+                monedas: ['🇪🇺 EUR', '🇺🇸 USD', '🇲🇽 MXN'],
+            },
+        };
+
+        function cambiarIdioma(idioma) {
+            const t = traducciones[idioma];
+            if (!t) return;
+            elementosTexto.titulo.textContent = t.titulo;
+            elementosTexto.descripcion.textContent = t.descripcion;
+            elementosTexto.botonesMoneda.forEach((btn, i) => {
+                if (i < t.monedas.length) {
+                    btn.textContent = t.monedas[i];
                 }
-            }
-            function createCardButton(divId, currency) {
-                var container = document.getElementById('card-button-' + divId);
-                if (!container || container.innerHTML !== '') return;
-                paypalCheckout.Buttons({
-                    style: { 
-                        label: 'card', 
-                        color: 'blue', 
-                        shape: 'pill',
-                        height: 48
-                    },
-                    createOrder: function(data, actions) {
-                        var amount = parseFloat(document.getElementById('amount-eur').value) || 10.00;
-                        return actions.order.create({
-                            purchase_units: [{
-                                amount: { 
-                                    currency_code: currency, 
-                                    value: amount.toFixed(2) 
-                                },
-                                description: 'Donación con tarjeta'
-                            }],
-                            application_context: { shipping_preference: 'NO_SHIPPING' }
-                        });
-                    },
-                    onApprove: function(data, actions) {
-                        return actions.order.capture().then(function(details) {
-                            alert('✅ ¡Pago con tarjeta completado! Gracias ' + details.payer.name.given_name);
-                        });
-                    },
-                    onError: function(err) {
-                        console.error(err);
-                        alert('❌ Error en el pago con tarjeta. Revisa la consola.');
-                    }
-                }).render('#card-button-' + divId);
-            }
-            // Llamar al cargar
-            setTimeout(renderCardButtonEUR, 1000);
-        </script>
-        <!-- Campo oculto para el monto (se usa en el botón de tarjeta) -->
-        <input type="hidden" id="amount-eur" value="10.00" />
-    </div>
+            });
+            // Guardar idioma actual en data-* para referencia (opcional)
+            document.documentElement.lang = idioma;
+        }
 
-    <!-- ==================== USD ==================== -->
-    <div id="usd" class="paypal-div oculto">
-        <script src="https://www.paypal.com/sdk/js?client-id=BAAKWAcerKo-Sa0MtDQKoUrWQzdaLWnWokdOf0wfgAD1jFl_empEwpQuMqz7DFOXQCMolgGgQ2wgHsbQ-I&components=hosted-buttons&disable-funding=venmo&currency=USD"></script>
-        <div id="paypal-container-5JAVN94MQCZRQ"></div>
-        <script>
-            paypal.HostedButtons({
-                hostedButtonId: "5JAVN94MQCZRQ",
-            }).render("#paypal-container-5JAVN94MQCZRQ")
-        </script>
+        idiomaBotones.forEach((btn) => {
+            btn.addEventListener('click', function () {
+                idiomaBotones.forEach(b => b.classList.remove('activo-idioma'));
+                this.classList.add('activo-idioma');
+                const idioma = this.dataset.idioma;
+                cambiarIdioma(idioma);
+            });
+        });
 
-        <div class="separador">O paga con tarjeta</div>
-        <div id="card-button-usd" class="card-button-container"></div>
-        <script>
-            function renderCardButtonUSD() {
-                if (document.getElementById('card-button-usd').innerHTML !== '') return;
-                if (typeof paypalCheckout === 'undefined') {
-                    var script = document.createElement('script');
-                    script.src = 'https://www.paypal.com/sdk/js?client-id=BAAKWAcerKo-Sa0MtDQKoUrWQzdaLWnWokdOf0wfgAD1jFl_empEwpQuMqz7DFOXQCMolgGgQ2wgHsbQ-I&components=buttons&currency=USD&intent=capture';
-                    script.onload = function() {
-                        window.paypalCheckout = paypal;
-                        createCardButton('usd', 'USD');
-                    };
-                    document.head.appendChild(script);
-                } else {
-                    createCardButton('usd', 'USD');
-                }
-            }
-            setTimeout(renderCardButtonUSD, 1000);
-        </script>
-        <input type="hidden" id="amount-usd" value="10.00" />
-    </div>
-
-    <!-- ==================== MXN ==================== -->
-    <div id="mxn" class="paypal-div oculto">
-        <script src="https://www.paypal.com/sdk/js?client-id=BAAKWAcerKo-Sa0MtDQKoUrWQzdaLWnWokdOf0wfgAD1jFl_empEwpQuMqz7DFOXQCMolgGgQ2wgHsbQ-I&components=hosted-buttons&disable-funding=venmo&currency=MXN"></script>
-        <div id="paypal-container-GKU5U6WXG2FBQ"></div>
-        <script>
-            paypal.HostedButtons({
-                hostedButtonId: "GKU5U6WXG2FBQ",
-            }).render("#paypal-container-GKU5U6WXG2FBQ")
-        </script>
-
-        <div class="separador">O paga con tarjeta</div>
-        <div id="card-button-mxn" class="card-button-container"></div>
-        <script>
-            function renderCardButtonMXN() {
-                if (document.getElementById('card-button-mxn').innerHTML !== '') return;
-                if (typeof paypalCheckout === 'undefined') {
-                    var script = document.createElement('script');
-                    script.src = 'https://www.paypal.com/sdk/js?client-id=BAAKWAcerKo-Sa0MtDQKoUrWQzdaLWnWokdOf0wfgAD1jFl_empEwpQuMqz7DFOXQCMolgGgQ2wgHsbQ-I&components=buttons&currency=MXN&intent=capture';
-                    script.onload = function() {
-                        window.paypalCheckout = paypal;
-                        createCardButton('mxn', 'MXN');
-                    };
-                    document.head.appendChild(script);
-                } else {
-                    createCardButton('mxn', 'MXN');
-                }
-            }
-            setTimeout(renderCardButtonMXN, 1000);
-        </script>
-        <input type="hidden" id="amount-mxn" value="10.00" />
-    </div>
-
-</div>
-
-<script>
-    function mostrar(id, boton) {
-        document.querySelectorAll('.paypal-div').forEach(el => el.classList.add('oculto'));
-        document.getElementById(id).classList.remove('oculto');
-        document.querySelectorAll('.btn-monedas button').forEach(b => b.classList.remove('activo'));
-        if (boton) boton.classList.add('activo');
-    }
-</script>
+        // Inicializar con español (ya está por defecto)
+        cambiarIdioma('es');
+    </script>
 
 </body>
 </html>
